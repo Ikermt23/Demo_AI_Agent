@@ -6,9 +6,7 @@ import chainlit as cl
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
-from calendar_utils import book_slot, get_available_slots
-from email_utils import send_booking_email
-from sheets_utils import save_lead_sheets
+from booking_service import complete_booking, get_slots_for_channel
 
 load_dotenv()
 
@@ -22,7 +20,7 @@ with open("prompt.txt", "r", encoding="utf-8") as f:
 
 
 def build_messages(history):
-    slots_data = get_available_slots(3)
+    slots_data = get_slots_for_channel(3)
     slots = slots_data.get("slots", [])
 
     if slots:
@@ -105,12 +103,12 @@ def _process_booking(reply):
     try:
         json_str = reply.split("<BOOKING>")[1].split("</BOOKING>")[0].strip()
         data = json.loads(json_str)
-        result = book_slot(**data)
-        print(f"[BOOKING] {data} -> {result}")
+        result = complete_booking(data)
+        print(f"[BOOKING] {data} -> {result['booking']}")
 
         if result.get("success"):
-            sheets_result = save_lead_sheets(data)
-            email_result = send_booking_email(data)
+            sheets_result = result.get("sheets") or {}
+            email_result = result.get("email") or {}
 
             if email_result.get("success"):
                 visible += "\n\nTambien te acabo de enviar un email con la confirmacion."
@@ -125,7 +123,7 @@ def _process_booking(reply):
                     f"[BOOKING WARNING] Email no enviado: {email_result.get('error', '')}"
                 )
         else:
-            visible += f"\n\n(Hubo un problema al reservar: {result.get('error', '')})"
+            visible += f"\n\n(Hubo un problema al reservar: {result['booking'].get('error', '')})"
     except Exception as error:
         print(f"[ERROR] procesando booking: {error}")
 
