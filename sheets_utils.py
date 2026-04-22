@@ -1,5 +1,7 @@
+import base64
 import json
 import os
+import tempfile
 from datetime import datetime
 
 import gspread
@@ -8,8 +10,24 @@ from gspread.exceptions import APIError, SpreadsheetNotFound, WorksheetNotFound
 
 DEFAULT_CREDENTIALS_FILE = "credentials.json"
 
+_tmp_credentials_path = None
+
 
 def _credentials_path():
+    global _tmp_credentials_path
+
+    # Soporte para Railway/cloud: credenciales en variable de entorno (base64)
+    credentials_b64 = os.getenv("GOOGLE_CREDENTIALS_JSON", "").strip()
+    if credentials_b64:
+        if _tmp_credentials_path and os.path.exists(_tmp_credentials_path):
+            return _tmp_credentials_path
+        decoded = base64.b64decode(credentials_b64).decode("utf-8")
+        tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+        tmp.write(decoded)
+        tmp.close()
+        _tmp_credentials_path = tmp.name
+        return _tmp_credentials_path
+
     return os.getenv("GOOGLE_SHEETS_CREDENTIALS_FILE", DEFAULT_CREDENTIALS_FILE)
 
 

@@ -14,3 +14,9 @@ leads.jsonl
 # Archivos de Chainlit
 .chainlit/
 .files/
+
+# Credenciales Google (NUNCA SUBIR)
+credentials.json
+
+# Calendario generado automáticamente
+calendar.json

@@ -1,12 +1,35 @@
 import asyncio
 import json
 import os
+import re
 
 import chainlit as cl
 from dotenv import load_dotenv
+from langdetect import detect as _langdetect
+from langdetect import DetectorFactory
 from openai import AsyncOpenAI
 
 from booking_service import complete_booking, get_slots_for_channel
+
+DetectorFactory.seed = 0  # resultados deterministas
+
+_ES_WORDS = {
+    'el', 'la', 'los', 'las', 'un', 'una', 'de', 'que', 'y', 'es', 'soy',
+    'voy', 'me', 'mi', 'tu', 'su', 'como', 'pero', 'por', 'para', 'con',
+    'hay', 'tengo', 'quiero', 'hola', 'gracias', 'cuando', 'donde', 'estoy',
+    'este', 'esta', 'ese', 'porque', 'aunque', 'tambien', 'desde', 'hasta',
+    'cuanto', 'cuantos', 'busco', 'necesito',
+}
+_EN_WORDS = {
+    'the', 'is', 'are', 'am', 'im', 'my', 'your', 'we', 'it', 'in', 'to',
+    'and', 'or', 'going', 'gonna', 'will', 'can', 'have', 'has', 'do',
+    'does', 'hello', 'hi', 'study', 'studying', 'from', 'what', 'when',
+    'where', 'who', 'that', 'this', 'at', 'for', 'of', 'with', 'about',
+    'january', 'february', 'march', 'april', 'june', 'july', 'august',
+    'september', 'october', 'november', 'december', 'university', 'an',
+    'looking', 'interested', 'need', 'want', 'would', 'could', 'should',
+    'name', 'room', 'price', 'visit', 'book', 'available',
+}
 
 load_dotenv()
 
@@ -19,7 +42,33 @@ with open("prompt.txt", "r", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
 
 
-def build_messages(history):
+def detect_language(text: str, current_lang: str = "es") -> str:
+    clean = text.strip()
+
+    # Caracteres españoles exclusivos → español seguro
+    if any(c in clean for c in "áéíóúñüÁÉÍÓÚÑÜ¿¡"):
+        return "es"
+
+    words = set(re.findall(r"\b\w+\b", clean.lower()))
+    en_score = len(words & _EN_WORDS)
+    es_score = len(words & _ES_WORDS)
+
+    if en_score > es_score:
+        return "en"
+    if es_score > en_score:
+        return "es"
+
+    # Sin ganador claro: langdetect si hay texto suficiente
+    if len(clean) >= 10:
+        try:
+            return "en" if _langdetect(clean) == "en" else "es"
+        except Exception:
+            pass
+
+    return current_lang
+
+
+def build_messages(history, lang: str = "es"):
     slots_data = get_slots_for_channel(3)
     slots = slots_data.get("slots", [])
 
@@ -38,7 +87,12 @@ def build_messages(history):
             "\n\n# HUECOS DISPONIBLES: No hay huecos disponibles en los proximos dias."
         )
 
-    system_msg = {"role": "system", "content": SYSTEM_PROMPT + slot_section}
+    if lang == "en":
+        lang_override = "\n\n# INSTRUCCIÓN OBLIGATORIA PARA ESTE TURNO\nEl último mensaje del usuario está en INGLÉS. Responde ÚNICAMENTE en inglés. Ni una palabra en español."
+    else:
+        lang_override = "\n\n# INSTRUCCIÓN OBLIGATORIA PARA ESTE TURNO\nEl último mensaje del usuario está en ESPAÑOL. Responde ÚNICAMENTE en español. Ni una palabra en inglés."
+
+    system_msg = {"role": "system", "content": SYSTEM_PROMPT + slot_section + lang_override}
     return [system_msg] + history
 
 
@@ -62,10 +116,11 @@ async def call_llm(messages):
 @cl.on_chat_start
 async def start():
     cl.user_session.set("history", [])
+    cl.user_session.set("lang", "es")
     await cl.Message(
         content=(
-            "Hola! I'm Alex from UniLiving Barcelona. "
-            "Puedo ayudarte en espanol or English. What's your name?"
+            "¡Hola! Soy Alex de UniLiving Barcelona 👋\n"
+            "¿Cómo te llamas?"
         )
     ).send()
 
@@ -76,7 +131,10 @@ async def main(message: cl.Message):
     history.append({"role": "user", "content": message.content})
 
     try:
-        messages = build_messages(history)
+        current_lang = cl.user_session.get("lang", "es")
+        lang = detect_language(message.content, current_lang)
+        cl.user_session.set("lang", lang)
+        messages = build_messages(history, lang)
         response = await call_llm(messages)
         reply = response.choices[0].message.content or ""
 
