@@ -193,10 +193,7 @@ async def main(message: cl.Message):
         history.pop()
         cl.user_session.set("history", history)
         await cl.Message(
-            content=(
-                "Uy, algo ha fallado por mi lado al procesar tu mensaje "
-                f"({type(error).__name__}). Puedes repetir lo que me decias?"
-            )
+            content="Uy, algo ha fallado por mi lado. Puedes repetir lo que me decias?"
         ).send()
 
 
