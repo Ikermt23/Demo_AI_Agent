@@ -14,7 +14,7 @@ def run_tests():
                 {
                     "id": "toolcall-1",
                     "name": "get_available_slots",
-                    "arguments": {
+                    "parameters": {
                         "count": 3,
                         "language": "es",
                     },
@@ -25,6 +25,12 @@ def run_tests():
 
     response = client.post("/tools/webhook", json=payload)
     print("POST /tools/webhook ->", response.status_code, response.json())
+
+    ignored = client.post(
+        "/tools/webhook",
+        json={"message": {"type": "status-update", "status": "in-progress"}},
+    )
+    print("POST /tools/webhook status-update ->", ignored.status_code, ignored.json())
 
 
 if __name__ == "__main__":

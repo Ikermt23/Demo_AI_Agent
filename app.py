@@ -1,17 +1,24 @@
 import asyncio
 import json
+import logging
 import os
 import re
 
 import chainlit as cl
 from dotenv import load_dotenv
-from langdetect import detect as _langdetect
-from langdetect import DetectorFactory
 from openai import AsyncOpenAI
+
+try:
+    from langdetect import DetectorFactory
+    from langdetect import detect as _langdetect
+except Exception:  # pragma: no cover - fallback if optional dependency is missing
+    DetectorFactory = None
+    _langdetect = None
 
 from booking_service import complete_booking, get_slots_for_channel
 
-DetectorFactory.seed = 0  # resultados deterministas
+if DetectorFactory is not None:
+    DetectorFactory.seed = 0  # resultados deterministas
 
 _ES_WORDS = {
     'el', 'la', 'los', 'las', 'un', 'una', 'de', 'que', 'y', 'es', 'soy',
@@ -33,13 +40,42 @@ _EN_WORDS = {
 
 load_dotenv()
 
-client = AsyncOpenAI(
-    api_key=os.getenv("GROQ_API_KEY"),
-    base_url="https://api.groq.com/openai/v1",
-)
+logger = logging.getLogger("uniliving.chat")
+_client = None
 
 with open("prompt.txt", "r", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
+
+
+def _is_env_set(name: str) -> bool:
+    return bool(os.getenv(name, "").strip())
+
+
+def get_runtime_checks():
+    return {
+        "groq_api_key": _is_env_set("GROQ_API_KEY"),
+        "spreadsheet_id": _is_env_set("SPREADSHEET_ID"),
+        "google_credentials_json": _is_env_set("GOOGLE_CREDENTIALS_JSON"),
+        "google_sheets_credentials_file": _is_env_set("GOOGLE_SHEETS_CREDENTIALS_FILE"),
+        "email_enabled": os.getenv("EMAIL_ENABLED", "false").strip().lower() == "true",
+    }
+
+
+def get_llm_client():
+    global _client
+
+    if _client is not None:
+        return _client
+
+    api_key = os.getenv("GROQ_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("Falta GROQ_API_KEY en el entorno del servidor.")
+
+    _client = AsyncOpenAI(
+        api_key=api_key,
+        base_url="https://api.groq.com/openai/v1",
+    )
+    return _client
 
 
 def detect_language(text: str, current_lang: str = "es") -> str:
@@ -59,7 +95,7 @@ def detect_language(text: str, current_lang: str = "es") -> str:
         return "es"
 
     # Sin ganador claro: langdetect si hay texto suficiente
-    if len(clean) >= 10:
+    if len(clean) >= 10 and _langdetect is not None:
         try:
             return "en" if _langdetect(clean) == "en" else "es"
         except Exception:
@@ -97,6 +133,7 @@ def build_messages(history, lang: str = "es"):
 
 
 async def call_llm(messages):
+    client = get_llm_client()
     for attempt in range(3):
         try:
             return await client.chat.completions.create(
@@ -115,6 +152,7 @@ async def call_llm(messages):
 
 @cl.on_chat_start
 async def start():
+    logger.info("Nueva sesion de chat. checks=%s", get_runtime_checks())
     cl.user_session.set("history", [])
     cl.user_session.set("lang", "es")
     await cl.Message(
@@ -146,11 +184,19 @@ async def main(message: cl.Message):
         await cl.Message(content=reply).send()
 
     except Exception as error:
-        print(f"[ERROR] {error}")
+        logger.exception(
+            "Error procesando mensaje. lang=%s history_len=%s last_user_message=%r",
+            cl.user_session.get("lang", "es"),
+            len(history),
+            message.content[:300],
+        )
         history.pop()
         cl.user_session.set("history", history)
         await cl.Message(
-            content="Uy, algo ha fallado por mi lado. Puedes repetir lo que me decias?"
+            content=(
+                "Uy, algo ha fallado por mi lado al procesar tu mensaje "
+                f"({type(error).__name__}). Puedes repetir lo que me decias?"
+            )
         ).send()
 
 
@@ -183,6 +229,6 @@ def _process_booking(reply):
         else:
             visible += f"\n\n(Hubo un problema al reservar: {result['booking'].get('error', '')})"
     except Exception as error:
-        print(f"[ERROR] procesando booking: {error}")
+        logger.exception("Error procesando booking.")
 
     return visible
