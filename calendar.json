@@ -1,0 +1,357 @@
+{
+  "slots": [
+    {
+      "id": "slot_001",
+      "fecha": "2026-04-22",
+      "hora": "10:00",
+      "dia_semana": "miércoles",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_002",
+      "fecha": "2026-04-22",
+      "hora": "12:00",
+      "dia_semana": "miércoles",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_003",
+      "fecha": "2026-04-22",
+      "hora": "17:00",
+      "dia_semana": "miércoles",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_004",
+      "fecha": "2026-04-22",
+      "hora": "19:00",
+      "dia_semana": "miércoles",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_005",
+      "fecha": "2026-04-23",
+      "hora": "10:00",
+      "dia_semana": "jueves",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_006",
+      "fecha": "2026-04-23",
+      "hora": "12:00",
+      "dia_semana": "jueves",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_007",
+      "fecha": "2026-04-23",
+      "hora": "17:00",
+      "dia_semana": "jueves",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_008",
+      "fecha": "2026-04-23",
+      "hora": "19:00",
+      "dia_semana": "jueves",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_009",
+      "fecha": "2026-04-24",
+      "hora": "10:00",
+      "dia_semana": "viernes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_010",
+      "fecha": "2026-04-24",
+      "hora": "12:00",
+      "dia_semana": "viernes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_011",
+      "fecha": "2026-04-24",
+      "hora": "17:00",
+      "dia_semana": "viernes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_012",
+      "fecha": "2026-04-24",
+      "hora": "19:00",
+      "dia_semana": "viernes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_013",
+      "fecha": "2026-04-25",
+      "hora": "11:00",
+      "dia_semana": "sábado",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_014",
+      "fecha": "2026-04-25",
+      "hora": "13:00",
+      "dia_semana": "sábado",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_015",
+      "fecha": "2026-04-27",
+      "hora": "10:00",
+      "dia_semana": "lunes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_016",
+      "fecha": "2026-04-27",
+      "hora": "12:00",
+      "dia_semana": "lunes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_017",
+      "fecha": "2026-04-27",
+      "hora": "17:00",
+      "dia_semana": "lunes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_018",
+      "fecha": "2026-04-27",
+      "hora": "19:00",
+      "dia_semana": "lunes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_019",
+      "fecha": "2026-04-28",
+      "hora": "10:00",
+      "dia_semana": "martes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_020",
+      "fecha": "2026-04-28",
+      "hora": "12:00",
+      "dia_semana": "martes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_021",
+      "fecha": "2026-04-28",
+      "hora": "17:00",
+      "dia_semana": "martes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_022",
+      "fecha": "2026-04-28",
+      "hora": "19:00",
+      "dia_semana": "martes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_023",
+      "fecha": "2026-04-29",
+      "hora": "10:00",
+      "dia_semana": "miércoles",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_024",
+      "fecha": "2026-04-29",
+      "hora": "12:00",
+      "dia_semana": "miércoles",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_025",
+      "fecha": "2026-04-29",
+      "hora": "17:00",
+      "dia_semana": "miércoles",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_026",
+      "fecha": "2026-04-29",
+      "hora": "19:00",
+      "dia_semana": "miércoles",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_027",
+      "fecha": "2026-04-30",
+      "hora": "10:00",
+      "dia_semana": "jueves",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_028",
+      "fecha": "2026-04-30",
+      "hora": "12:00",
+      "dia_semana": "jueves",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_029",
+      "fecha": "2026-04-30",
+      "hora": "17:00",
+      "dia_semana": "jueves",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_030",
+      "fecha": "2026-04-30",
+      "hora": "19:00",
+      "dia_semana": "jueves",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_031",
+      "fecha": "2026-05-01",
+      "hora": "10:00",
+      "dia_semana": "viernes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_032",
+      "fecha": "2026-05-01",
+      "hora": "12:00",
+      "dia_semana": "viernes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_033",
+      "fecha": "2026-05-01",
+      "hora": "17:00",
+      "dia_semana": "viernes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_034",
+      "fecha": "2026-05-01",
+      "hora": "19:00",
+      "dia_semana": "viernes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_035",
+      "fecha": "2026-05-02",
+      "hora": "11:00",
+      "dia_semana": "sábado",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_036",
+      "fecha": "2026-05-02",
+      "hora": "13:00",
+      "dia_semana": "sábado",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_037",
+      "fecha": "2026-05-04",
+      "hora": "10:00",
+      "dia_semana": "lunes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_038",
+      "fecha": "2026-05-04",
+      "hora": "12:00",
+      "dia_semana": "lunes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_039",
+      "fecha": "2026-05-04",
+      "hora": "17:00",
+      "dia_semana": "lunes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_040",
+      "fecha": "2026-05-04",
+      "hora": "19:00",
+      "dia_semana": "lunes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_041",
+      "fecha": "2026-05-05",
+      "hora": "10:00",
+      "dia_semana": "martes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_042",
+      "fecha": "2026-05-05",
+      "hora": "12:00",
+      "dia_semana": "martes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_043",
+      "fecha": "2026-05-05",
+      "hora": "17:00",
+      "dia_semana": "martes",
+      "booked": false,
+      "user": null
+    },
+    {
+      "id": "slot_044",
+      "fecha": "2026-05-05",
+      "hora": "19:00",
+      "dia_semana": "martes",
+      "booked": false,
+      "user": null
+    }
+  ],
+  "generated_at": "2026-04-22T11:56:47.483536"
+}
