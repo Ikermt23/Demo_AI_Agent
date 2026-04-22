@@ -1,132 +1,132 @@
-import chainlit as cl
-from openai import AsyncOpenAI
+import asyncio
 import json
 import os
+
+import chainlit as cl
 from dotenv import load_dotenv
-from calendar_utils import get_available_slots, book_slot  # Lo crearemos en el Hito 1
+from openai import AsyncOpenAI
+
+from calendar_utils import book_slot, get_available_slots
+from email_utils import send_booking_email
+from sheets_utils import save_lead_sheets
 
 load_dotenv()
 
 client = AsyncOpenAI(
-    api_key=os.getenv("GEMINI_API_KEY"),
-    base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    api_key=os.getenv("GROQ_API_KEY"),
+    base_url="https://api.groq.com/openai/v1",
 )
 
 with open("prompt.txt", "r", encoding="utf-8") as f:
     SYSTEM_PROMPT = f.read()
 
-# Definición de herramientas (tools) para el modelo
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_available_slots",
-            "description": "Obtiene los horarios disponibles del calendario para agendar visitas",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "modalidad": {
-                        "type": "string",
-                        "enum": ["presencial", "videollamada", "cualquiera"],
-                        "description": "Tipo de visita"
-                    }
-                },
-                "required": []
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "book_slot",
-            "description": "Reserva un slot concreto del calendario con los datos del usuario",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "fecha": {"type": "string", "description": "YYYY-MM-DD"},
-                    "hora": {"type": "string", "description": "HH:MM"},
-                    "modalidad": {"type": "string", "enum": ["presencial", "videollamada"]},
-                    "nombre": {"type": "string"},
-                    "email": {"type": "string"},
-                    "telefono": {"type": "string"},
-                    "pais_origen": {"type": "string"},
-                    "estudios": {"type": "string"},
-                    "fecha_estancia": {"type": "string"}
-                },
-                "required": ["fecha", "hora", "modalidad", "nombre", "email", "telefono"]
-            }
-        }
-    }
-]
+
+def build_messages(history):
+    slots_data = get_available_slots(3)
+    slots = slots_data.get("slots", [])
+
+    if slots:
+        slots_lines = "\n".join(
+            f"- {slot['dia_semana'].capitalize()} {slot['fecha']} a las {slot['hora']}"
+            for slot in slots
+        )
+        slot_section = (
+            "\n\n# HUECOS DISPONIBLES AHORA MISMO\n"
+            "(Usa exactamente estos cuando el usuario quiera visita. No inventes otros.)\n"
+            + slots_lines
+        )
+    else:
+        slot_section = (
+            "\n\n# HUECOS DISPONIBLES: No hay huecos disponibles en los proximos dias."
+        )
+
+    system_msg = {"role": "system", "content": SYSTEM_PROMPT + slot_section}
+    return [system_msg] + history
+
+
+async def call_llm(messages):
+    for attempt in range(3):
+        try:
+            return await client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=messages,
+                temperature=0.7,
+            )
+        except Exception as error:
+            if "429" in str(error) and attempt < 2:
+                wait = 5 * (attempt + 1)
+                print(f"[WARN] Rate limit, esperando {wait}s...")
+                await asyncio.sleep(wait)
+                continue
+            raise
+
 
 @cl.on_chat_start
 async def start():
-    cl.user_session.set("history", [
-        {"role": "system", "content": SYSTEM_PROMPT}
-    ])
+    cl.user_session.set("history", [])
     await cl.Message(
-        content="¡Hola! 👋 Soy Alex, de UniLiving Madrid. Ayudo a estudiantes como tú a encontrar su sitio perfecto para este curso. ¿Cómo te llamas?"
+        content=(
+            "Hola! I'm Alex from UniLiving Barcelona. "
+            "Puedo ayudarte en espanol or English. What's your name?"
+        )
     ).send()
+
 
 @cl.on_message
 async def main(message: cl.Message):
     history = cl.user_session.get("history")
     history.append({"role": "user", "content": message.content})
-    
-    # Loop para manejar tool calls
-    max_iterations = 5
-    for _ in range(max_iterations):
-        response = await client.chat.completions.create(
-            model="gemini-2.0-flash-lite",
-            messages=history,
-            tools=TOOLS,
-            temperature=0.7
-        )
-        
-        msg = response.choices[0].message
-        
-        # ¿El modelo quiere usar una tool?
-        if msg.tool_calls:
-            history.append({
-                "role": "assistant",
-                "content": msg.content or "",
-                "tool_calls": [
-                    {
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {
-                            "name": tc.function.name,
-                            "arguments": tc.function.arguments,
-                        },
-                    }
-                    for tc in msg.tool_calls
-                ],
-            })
 
-            for tool_call in msg.tool_calls:
-                func_name = tool_call.function.name
-                args = json.loads(tool_call.function.arguments)
-                
-                # Ejecutar la función correspondiente
-                if func_name == "get_available_slots":
-                    result = get_available_slots(**args)
-                elif func_name == "book_slot":
-                    result = book_slot(**args)
-                else:
-                    result = {"error": "función desconocida"}
-                
-                history.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(result, ensure_ascii=False)
-                })
-            
-            # Volver a llamar al modelo con el resultado de la tool
-            continue
-        
-        # Respuesta final al usuario
-        reply = msg.content
+    try:
+        messages = build_messages(history)
+        response = await call_llm(messages)
+        reply = response.choices[0].message.content or ""
+
+        if "<BOOKING>" in reply:
+            reply = _process_booking(reply)
+
         history.append({"role": "assistant", "content": reply})
         cl.user_session.set("history", history)
         await cl.Message(content=reply).send()
-        break
+
+    except Exception as error:
+        print(f"[ERROR] {error}")
+        history.pop()
+        cl.user_session.set("history", history)
+        await cl.Message(
+            content="Uy, algo ha fallado por mi lado. Puedes repetir lo que me decias?"
+        ).send()
+
+
+def _process_booking(reply):
+    """Extrae el bloque <BOOKING>, ejecuta la reserva y devuelve el mensaje limpio."""
+    visible = reply.split("<BOOKING>")[0].strip()
+
+    try:
+        json_str = reply.split("<BOOKING>")[1].split("</BOOKING>")[0].strip()
+        data = json.loads(json_str)
+        result = book_slot(**data)
+        print(f"[BOOKING] {data} -> {result}")
+
+        if result.get("success"):
+            sheets_result = save_lead_sheets(data)
+            email_result = send_booking_email(data)
+
+            if email_result.get("success"):
+                visible += "\n\nTambien te acabo de enviar un email con la confirmacion."
+
+            if not sheets_result.get("success"):
+                print(
+                    f"[BOOKING WARNING] Sheets no guardado: {sheets_result.get('error', '')}"
+                )
+
+            if not email_result.get("success") and not email_result.get("skipped"):
+                print(
+                    f"[BOOKING WARNING] Email no enviado: {email_result.get('error', '')}"
+                )
+        else:
+            visible += f"\n\n(Hubo un problema al reservar: {result.get('error', '')})"
+    except Exception as error:
+        print(f"[ERROR] procesando booking: {error}")
+
+    return visible
