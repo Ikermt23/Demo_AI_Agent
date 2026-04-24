@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UniLiving Barcelona — Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f0ea;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .header {
+      text-align: center;
+      padding: 12px;
+      background: #152238;
+      color: white;
+      flex-shrink: 0;
+    }
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header p { font-size: 12px; opacity: 0.7; }
+    .chat-wrapper { flex: 1; overflow: hidden; }
+    .chat-wrapper iframe { width: 100%; height: 100%; border: none; }
+    .voice-fab {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 1000;
+    }
+    .voice-label {
+      background: #152238;
+      color: white;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>UniLiving Barcelona</h1>
+    <p>Asistente virtual Alex</p>
+  </div>
+
+  <div class="chat-wrapper">
+    <iframe src="https://demoaiagent-production.up.railway.app/"></iframe>
+  </div>
+
+  <div class="voice-fab">
+    <span class="voice-label">🎙️ Llamar a Alex</span>
+    <elevenlabs-convai agent-id="agent_6301kpz5csrbf3atdtccvk93myge"></elevenlabs-convai>
+  </div>
+
+  <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
+</body>
+</html>
