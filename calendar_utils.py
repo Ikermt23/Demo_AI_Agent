@@ -21,7 +21,7 @@ DAY_NAMES = {
 }
 
 
-def generate_calendar(days_ahead=14):
+def generate_calendar(days_ahead=60):
     """Genera calendar.json con slots para los próximos N días.
     Preserva reservas existentes si el fichero ya existe."""
     existing_bookings = {}
@@ -163,7 +163,11 @@ def _should_regenerate():
     generated = cal.get("generated_at", "")
     if not generated:
         return True
-    return datetime.fromisoformat(generated).date() < datetime.today().date()
+    if datetime.fromisoformat(generated).date() < datetime.today().date():
+        return True
+    today = datetime.today().date().isoformat()
+    available = [s for s in cal["slots"] if not s["booked"] and s["fecha"] >= today]
+    return len(available) == 0
 
 
 if _should_regenerate():
