@@ -26,4 +26,12 @@ def health():
     }
 
 
+@app.get("/admin/reset-calendar")
+def reset_calendar():
+    from calendar_utils import generate_calendar
+    cal = generate_calendar()
+    available = [s for s in cal["slots"] if not s["booked"]]
+    return {"ok": True, "total_slots": len(cal["slots"]), "available": len(available)}
+
+
 mount_chainlit(app, os.path.join(BASE_DIR, "app.py"), path="/")

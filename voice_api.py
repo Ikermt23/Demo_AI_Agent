@@ -43,7 +43,23 @@ def get_slots_tool(body: Dict[str, Any] = {}):
 def book_visit_tool(body: Dict[str, Any] = {}):
     """ElevenLabs llama a este endpoint cuando el agente quiere reservar."""
     language = str(body.pop("language", "es"))
-    result = complete_booking(body)
+
+    required = ["fecha", "hora", "modalidad", "nombre", "email", "telefono"]
+    missing = [f for f in required if not body.get(f)]
+    if missing:
+        return {
+            "result": (
+                f"Missing required fields: {', '.join(missing)}. Ask the user for them."
+                if language == "en"
+                else f"Faltan datos obligatorios: {', '.join(missing)}. Preguntaselos al usuario."
+            )
+        }
+
+    try:
+        result = complete_booking(body)
+    except Exception as e:
+        print(f"[BOOK ERROR] {e}")
+        return {"result": "Error interno al reservar." if language != "en" else "Internal booking error."}
 
     if result["success"]:
         msg = (
